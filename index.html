@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Этот секретный тег ниже заставляет сайт понимать размеры экрана телефона! -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хакерский Терминал</title>
+</head>
+<body style="background-color: black; color: green; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 0; overflow-x: hidden;">
+
+    <!-- Холст для матричного дождя -->
+    <canvas id="matrix" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></canvas>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ (ТЕПЕРЬ СЖИМАЕТСЯ ПОД МОБИЛКИ) -->
+    <div style="position: relative; z-index: 1; padding: 20px; box-sizing: border-box;">
+        <h1 style="color: #00ff00; font-size: clamp(24px, 5vw, 40px); text-shadow: 0 0 10px #00ff00; font-weight: bold; margin-top: 30px;">
+            ГЛАВНАЯ СТРАНИЦА ХАКЕРА
+        </h1>
+        <p style="color: #888; font-size: clamp(14px, 3vw, 18px);">Система ПМР готова к работе...</p>
+
+        <br><br>
+        
+        <button onclick="openDB()" style="background-color: black; color: white; font-size: clamp(16px, 4vw, 22px); font-family: monospace; border: 2px solid white; padding: 10px 20px; border-radius: 5px; cursor: pointer; max-width: 100%;">
+            🔓 Открыть секретную базу данных
+        </button>
+
+        <br><br><br>
+        
+        <!-- Консоль теперь имеет max-width: 500px и width: 100%, чтобы сжиматься на смартфонах -->
+        <div style="background-color: rgba(17, 17, 17, 0.9); border: 1px solid #00ff00; max-width: 500px; width: 100%; margin: 0 auto; padding: 15px; text-align: left; border-radius: 5px; box-sizing: border-box;">
+            <p style="color: #00ff00; margin: 0 0 10px 0; font-size: 14px;">[КОНСОЛЬ СИСТЕМЫ ПМР v1.0]</p>
+            <p style="color: #888; margin: 0 0 10px 0; font-size: 14px;">Введите команду (help, hack):</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="consoleInput" style="background-color: black; color: #00ff00; border: 1px solid #00ff00; padding: 8px; flex-grow: 1; font-family: monospace; font-size: 14px;">
+                <button onclick="runCommand()" style="background-color: #00ff00; color: black; border: none; padding: 8px 15px; font-weight: bold; cursor: pointer;">ENTER</button>
+            </div>
+        </div>
+
+        <br><br>
+        <div id="hackProgress" style="display: none; background-color: rgba(0, 0, 0, 0.9); border: 1px dashed #00ff00; max-width: 500px; width: 100%; margin: 0 auto; padding: 15px; color: #00ff00; font-family: monospace; text-align: left; box-sizing: border-box;">
+            <p>>>> ПОДКЛЮЧЕНИЕ К СЕРВЕРУ...</p>
+            <p>>>> ОБХОД БРАНДМАУЭРА: УСПЕШНО [100%]</p>
+            <p style="color: red; font-weight: bold; animation: blink 1s infinite;">>>> ИДЕТ ВЗЛОМ СИСТЕМЫ ПЕНТАГОНА...</p>
+            <p id="progressText" style="color: #00ff00; font-size: 24px; font-weight: bold;">ПРОГРЕСС: 0%</p>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО БАЗЫ ДАННЫХ -->
+    <div id="dbModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); z-index: 5; align-items: center; justify-content: center; padding: 10px; box-sizing: border-box;">
+        <div style="background-color: #111; border: 2px solid #ff00ff; padding: 20px; border-radius: 10px; max-width: 480px; width: 100%; text-align: left; box-shadow: 0 0 20px #ff00ff; color: #ff00ff; box-sizing: border-box;">
+            <h2 style="text-align: center; margin-top: 0; text-shadow: 0 0 5px #ff00ff; font-size: 20px;">📁 СЕКРЕТНОЕ ДОСЬЕ АГЕНТОВ</h2>
+            <hr style="border: 1px solid #ff00ff;">
+            
+            <div id="agent1" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px;">
+                <span><b>[Агент 1]:</b> Neo (Матрица)</span>
+                <button onclick="deleteAgent('agent1')" style="background-color: transparent; color: red; border: 1px solid red; cursor: pointer; padding: 5px 10px; font-family: monospace; font-size: 12px;">[УДАЛИТЬ]</button>
+            </div>
+            
+            <div id="agent2" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px;">
+                <span><b>[Агент 2]:</b> Снайпер_ПМР (Бендеры)</span>
+                <button onclick="deleteAgent('agent2')" style="background-color: transparent; color: red; border: 1px solid red; cursor: pointer; padding: 5px 10px; font-family: monospace; font-size: 12px;">[УДАЛИТЬ]</button>
+            </div>
+            
+            <div id="agent3" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 14px;">
+                <span><b>[Агент 3]:</b> Сёстры_Линк (Кишинёв)</span>
+                <button onclick="deleteAgent('agent3')" style="background-color: transparent; color: red; border: 1px solid red; cursor: pointer; padding: 5px 10px; font-family: monospace; font-size: 12px;">[УДАЛИТЬ]</button>
+            </div>
+            
+            <hr style="border: 1px solid #ff00ff;">
+            <button onclick="closeDB()" style="background-color: #ff00ff; color: black; border: none; padding: 12px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; border-radius: 5px; margin-top: 10px;">ЗАКРЫТЬ АРХИВ</button>
+        </div>
+    </div>
+
+    <!-- Скрипты логики -->
+    <script>
+    function openDB() { document.getElementById("dbModal").style.display = "flex"; }
+    function closeDB() { document.getElementById("dbModal").style.display = "none"; }
+    function deleteAgent(agentId) { document.getElementById(agentId).remove(); }
+
+    function runCommand() {
+        var cmd = document.getElementById("consoleInput").value;
+        if (cmd == "help") {
+            alert("Доступные команды:\nhelp - список команд\nhack - запустить протокол взлома");
+        } else if (cmd == "hack") {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            var oscillator = context.createOscillator();
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, context.currentTime);
+            oscillator.connect(context.destination);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.4);
+
+            document.getElementById("hackProgress").style.display = "block";
+
+            var percent = 0;
+            var timer = setInterval(function() {
+                percent += Math.floor(Math.random() * 10) + 1;
+                if (percent >= 100) {
+                    percent = 100;
+                    clearInterval(timer);
+                    
+                    document.body.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: black; color: #ff0000; font-family: monospace; text-align: center; padding: 20px; box-sizing: border-box;">
+                            <h1 style="font-size: clamp(24px, 6vw, 45px); text-shadow: 0 0 20px #ff0000; font-weight: bold; margin-bottom: 10px; animation: blink 0.5s infinite;">☠️ СИСТЕМА ВЗЛОМАНА ☠️</h1>
+                            <p id="typewriter" style="font-size: clamp(16px, 4vw, 22px); color: #fff; max-width: 600px; margin: 0 auto 30px auto; min-height: 40px; white-space: pre-line;"></p>
+                            <button onclick="location.reload()" style="background-color: #ff0000; color: black; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 5px;">
+                                ПЕРЕЗАПУСТИТЬ СИСТЕМУ
+                            </button>
+                        </div>
+                    `;
+
+                    var textToType = "Все секретные файлы Пентагона успешно скачаны в Приднестровье!";
+                    var charIndex = 0;
+                    var typeTimer = setInterval(function() {
+                        if (charIndex < textToType.length) {
+                            document.getElementById("typewriter").innerHTML += textToType.charAt(charIndex);
+                            charIndex++;
+                        } else {
+                            clearInterval(typeTimer);
+                        }
+                    }, 50);
+                }
+                document.getElementById("progressText").innerText = "ПРОГРЕСС: " + percent + "%";
+            }, 300);
+        } else {
+            alert("Ошибка: Неизвестная команда '" + cmd + "'");
+        }
+    }
+
+    // Код Матричного дождя
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas); // Принудительно обновляем Матрицу при изменении экрана!
+
+    const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fontSize = 16;
+    let columns = canvas.width / fontSize;
+    let rainDrops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'hsl(' + (Math.random() * 360) + ', 100%, 50%)';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < rainDrops.length; i++) {
+            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+            if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                rainDrops[i] = 0;
+            }
+            rainDrops[i]++;
+        }
+    }
+    setInterval(draw, 30);
+    </script>
+    <style>
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</body>
+</html>
